@@ -5,11 +5,15 @@ VisualStudioVersion = 17.4.33103.184
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Libraries", "Libraries", "{2F5FFD9F-C5BE-490A-B880-380D5CCECA2B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intus.Core", "Libraries\Intus.Core\Intus.Core.csproj", "{24C8851D-2E03-4915-AD6A-EC5D779FEEE9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intus.Core", "Libraries\Intus.Core\Intus.Core.csproj", "{24C8851D-2E03-4915-AD6A-EC5D779FEEE9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intus.Data", "Libraries\Intus.Data\Intus.Data.csproj", "{5997D952-C71F-45F8-ABA5-EE31C9D90805}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intus.Data", "Libraries\Intus.Data\Intus.Data.csproj", "{5997D952-C71F-45F8-ABA5-EE31C9D90805}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intus.Services", "Libraries\Intus.Services\Intus.Services.csproj", "{D29758B8-06A8-4037-9FF6-1E4365BE1CF6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intus.Services", "Libraries\Intus.Services\Intus.Services.csproj", "{D29758B8-06A8-4037-9FF6-1E4365BE1CF6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{65813671-DB8A-4118-A577-0E98F3F4D8F3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intus.Web", "Presentation\Intus.Web\Intus.Web.csproj", "{C3AE67FE-A749-45A1-8060-E093DA4601A0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +33,10 @@ Global
 		{D29758B8-06A8-4037-9FF6-1E4365BE1CF6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D29758B8-06A8-4037-9FF6-1E4365BE1CF6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D29758B8-06A8-4037-9FF6-1E4365BE1CF6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C3AE67FE-A749-45A1-8060-E093DA4601A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C3AE67FE-A749-45A1-8060-E093DA4601A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C3AE67FE-A749-45A1-8060-E093DA4601A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C3AE67FE-A749-45A1-8060-E093DA4601A0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -37,6 +45,7 @@ Global
 		{24C8851D-2E03-4915-AD6A-EC5D779FEEE9} = {2F5FFD9F-C5BE-490A-B880-380D5CCECA2B}
 		{5997D952-C71F-45F8-ABA5-EE31C9D90805} = {2F5FFD9F-C5BE-490A-B880-380D5CCECA2B}
 		{D29758B8-06A8-4037-9FF6-1E4365BE1CF6} = {2F5FFD9F-C5BE-490A-B880-380D5CCECA2B}
+		{C3AE67FE-A749-45A1-8060-E093DA4601A0} = {65813671-DB8A-4118-A577-0E98F3F4D8F3}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {47C1080E-6B0A-46C1-BE24-0A5677BA3B24}

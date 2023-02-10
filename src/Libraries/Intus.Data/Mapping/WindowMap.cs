@@ -10,7 +10,7 @@ namespace Intus.Data.Mapping
 
             builder.HasKey(w => w.Id);
             builder.Property(w => w.Name).IsRequired();
-            builder.Property(p => p.CreatedDate).IsRequired();
+            builder.Property(p => p.CreateDate).IsRequired();
         }
     }
 }

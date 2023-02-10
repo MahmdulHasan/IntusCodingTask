@@ -13,7 +13,7 @@ namespace Intus.Data.Mapping
             builder.ToTable(DatabaseTableName.OrderWindow);
 
             builder.HasKey(ow => ow.Id);
-            builder.Property(p => p.CreatedDate).IsRequired();
+            builder.Property(p => p.CreateDate).IsRequired();
 
             builder.HasOne(ow => ow.Window)
             .WithMany(w => w.OrderWindows)

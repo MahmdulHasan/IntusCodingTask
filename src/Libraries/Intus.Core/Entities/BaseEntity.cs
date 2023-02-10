@@ -12,7 +12,7 @@ namespace Intus.Core.Entities
 
         public bool IsDeleted { get; set; }
 
-        public DateTime CreatedDate { get; set; } 
+        public DateTime CreateDate { get; set; } 
         public DateTime? UpdateDate { get; set; } 
     }
 }

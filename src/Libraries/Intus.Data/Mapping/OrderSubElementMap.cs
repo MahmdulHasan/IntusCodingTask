@@ -13,7 +13,7 @@ namespace Intus.Data.Mapping
             builder.ToTable(DatabaseTableName.OrderSubElement);
 
             builder.HasKey(ose => ose.Id);
-            builder.Property(p => p.CreatedDate).IsRequired();
+            builder.Property(p => p.CreateDate).IsRequired();
 
             builder.HasOne(ose => ose.Element)
                 .WithMany(e => e.OrderSubElements)

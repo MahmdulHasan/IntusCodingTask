@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace Intus.Data.Repository
 {
-    public partial class ApplicationDbRepository<TEntity> : IRepository<TEntity> where TEntity : class
+    public partial class ApplicationDbRepository<TEntity> : IRepository<TEntity> where TEntity : BaseEntity
     {
         #region Properties
 
@@ -31,7 +31,7 @@ namespace Intus.Data.Repository
             return await EntityWithNoTracking.AnyAsync(predicate);
         }
 
-        public virtual async Task<TEntity?> GetByIdAsync(Guid id)
+        public virtual async Task<TEntity?> GetByIdAsync(int id)
         {
             return await DbSetEntity.FindAsync(id).ConfigureAwait(false);
         }

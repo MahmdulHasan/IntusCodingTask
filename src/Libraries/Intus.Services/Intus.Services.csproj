@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Intus.Core\Intus.Core.csproj" />
+    <ProjectReference Include="..\Intus.Data\Intus.Data.csproj" />
+  </ItemGroup>
+
 </Project>

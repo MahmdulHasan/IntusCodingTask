@@ -1,0 +1,144 @@
+﻿@page "/orders"
+
+@inject NavigationManager NavigationManager;
+
+<h3>Orders</h3>
+
+@if (orders.Count > 0)
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Order Name</th>
+                <th>State</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in orders)
+            {
+                <tr>
+                    <td>@order.Name</td>
+                    <td>@order.State</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => EditOrder(order)">Edit</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<button class="btn btn-primary" @onclick="RedirectToComponentAddOrder">Add New Order</button>
+
+
+@code {
+    private List<OrderModel> orders = new List<OrderModel>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            // var response = await Http.GetJsonAsync<List<Order>>("<API endpoint for getting orders>");
+            //  _orders = response;
+            orders.Add(GetOrder());
+        }
+        catch(Exception ex)
+        {
+
+        }
+    }
+    private void RedirectToComponentAddOrder()
+    {
+        NavigationManager.NavigateTo("/addorder");
+    }
+
+    private void EditOrder(OrderModel order)
+    {
+
+    }
+
+    private class OrderModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string State { get; set; }
+        public List<Window> Windows { get; set; } = new List<Window>();
+    }
+
+    private class Window
+    {
+        public string Name { get; set; }
+        public int QuantityOfWindows { get; set; }
+        public int TotalSubElements { get; set; }
+        public List<SubElement> SubElements { get; set; } = new List<SubElement>();
+    }
+
+    private class SubElement
+    {
+        public int Element { get; set; }
+        public string Type { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
+
+    private OrderModel GetOrder()
+    {
+        return new OrderModel
+        {
+                Name = "New York Building 1",
+                State = "NY",
+                Windows = new List<Window>
+            {
+                new Window
+                {
+                    Name = "A51",
+                    QuantityOfWindows = 4,
+                    TotalSubElements = 3,
+                    SubElements = new List<SubElement>
+                    {
+                        new SubElement
+                        {
+                            Element = 1,
+                            Type = "Doors",
+                            Width = 1200,
+                            Height = 1850
+                        },
+                        new SubElement
+                        {
+                            Element = 2,
+                            Type = "Window",
+                            Width = 800,
+                            Height = 1850
+                        },
+                        new SubElement
+                        {
+                            Element = 3,
+                            Type = "Window",
+                            Width = 700,
+                            Height = 1850
+                        }
+                    }
+                },
+                new Window
+                {
+                    Name = "C Zone 5",
+                    QuantityOfWindows = 2,
+                    TotalSubElements = 1,
+                    SubElements = new List<SubElement>
+                    {
+                        new SubElement
+                        {
+                            Element = 1,
+                            Type = "Window",
+                            Width = 1500,
+                            Height = 2000
+                        }
+                    }
+                }
+            }
+        };
+    }
+}

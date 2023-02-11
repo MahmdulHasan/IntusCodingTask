@@ -1,0 +1,357 @@
+﻿@page "/addorder"
+
+@inject NavigationManager NavigationManager;
+
+<div style="display: flex; justify-content: space-between;">
+    <h3 style="margin-right: auto;">Add Order</h3>
+    <button class="btn btn-primary" @onclick="RedirectToComponentOrder">Back</button>
+</div>
+
+<div class="form-group mt-3">
+    <label for="orderName">Order Name</label>
+    <input type="text" class="form-control" id="orderName" @bind-value="order.Name" />
+</div>
+<div class="form-group">
+    <label for="orderState">Order State</label>
+    <input type="text" class="form-control" id="orderState" @bind-value="order.State" />
+</div>
+
+<div class="mt-5">
+    <div class="d-flex justify-content-lg-start">
+       <h3>Windows</h3>
+    </div>
+    <div class="d-flex justify-content-lg-end">
+        <button class="btn btn-primary" @onclick="AddWindow">New Window</button>
+    </div>
+</div>
+
+
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (order.Windows.Count > 0)
+        {
+            @foreach (var window in order.Windows)
+            {
+                <tr>
+                    <td>@window.Name</td>
+                    <td>@window.Quantity</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm" @onclick="(() => EditWindow(window))">Edit</button>
+                        <button type="button" class="btn btn-danger btn-sm" @onclick="(() => RemoveWindow(window))">Remove</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-primary" @onclick="SaveOrder">Save Order</button>
+
+@if (showWindowModal)
+{
+    <div class="modal" tabindex="-1" role="dialog" style=" display:block;">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="wiModalTitle">@windowModalTitle</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="CloseWindowModal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+
+                        <div class="form-group">
+                            <label for="windows">Windows</label>
+                            <select class="form-control" id="windows" @bind="window.Id" disabled="@disableWindowDropdown">
+                                @foreach (var window in windows)
+                                {
+                                    <option value="@window.Id">@window.Name</option>
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quantity">Quantity</label>
+                            <input type="text" class="form-control" id="quantity" @bind-value="window.Quantity" />
+                        </div>
+
+                        <h5 class="mt-3">@elementAddEditAction Sub Elememnts</h5>
+                        
+                        <div class="d-flex flex-row justify-content-between">
+                            <div class="form-group">
+                                <label for="elements">Type</label>
+                                <select class="form-control" id="elements" @bind="element.ElementId" style="width:200px" disabled="@disableElementDropdown">
+                                    @foreach (var element in elements)
+                                    {
+                                        <option value="@element.Id">@element.Type</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="quantity">Width</label>
+                                <input type="text" class="form-control ml-2" id="width" @bind-value="element.Width" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="quantity">Height</label>
+                                <input type="text" class="form-control ml-2" id="height" @bind-value="element.Height" />
+                            </div>                         
+                        </div>
+                        <button type="button" class="btn btn-primary d-flex justify-content-end mt-2" @onclick="SaveElement">@elementAddEditAction</button>
+
+                        <table class="table mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Width</th>
+                                    <th>Height</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var element in window.SubElements)
+                                {
+                                    <tr>
+                                        <td>@element.Type</td>
+                                        <td>@element.Width</td>
+                                        <td>@element.Height</td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary btn-sm" @onclick="(() => EditElement(element))">Edit</button>
+                                            <button type="button" class="btn btn-danger btn-sm" @onclick="(() => RemoveElement(element))">Remove</button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseWindowModal">Close</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveWindow">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+    private OrderModel order;
+    private Window window;
+    private SubElement element;
+    private List<Window> windows;
+    private List<SubElement> elements;
+    private string windowModalTitle; 
+    private bool showWindowModal = false;
+    private string elementAddEditAction;
+    private bool disableWindowDropdown = false;
+    private bool disableElementDropdown = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            order = new OrderModel();
+            window = new Window();
+            element = new SubElement();
+            windows = GeWindows();
+            elements = GeElements();
+            // var response = await Http.GetJsonAsync<List<Order>>("<API endpoint for getting orders>");
+            //  _orders = response;
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+    private void RedirectToComponentOrder()
+    {
+        NavigationManager.NavigateTo("/orders");
+    }
+
+    private async Task SaveOrder()
+    {
+
+        if (order.Id == 0)
+        {
+            //await Http.PostJsonAsync("<API endpoint for adding order>", order);
+        }
+
+        //var response = await Http.GetJsonAsync<List<Order>>("<API endpoint for getting orders>");
+        // _orders = response;
+    }
+    private void AddWindow()
+    {
+        window = new Window();
+        windowModalTitle = "New Widow";
+        disableWindowDropdown = false;
+        AddElement();
+        ShowWindowModal();
+    }
+    private void EditWindow(Window window)
+    {
+        this.window = window;
+        windowModalTitle = "Edit Widow";
+        disableWindowDropdown = true;
+        AddElement();
+        ShowWindowModal();
+    }
+
+    private void RemoveWindow(Window window)
+    {
+        order.Windows.Remove(window);
+    }
+
+    private void SaveWindow()
+    {
+        if (order.Windows.Any(w => w.Id == window.Id))
+        {
+            var existingWindow = order.Windows.FirstOrDefault(w => w.Id == window.Id);
+
+            existingWindow.Quantity = window.Quantity;
+        }
+        else
+        {
+            var newWindow = windows.FirstOrDefault(w => w.Id == window.Id);
+
+            if (newWindow != null)
+                window.Name = newWindow.Name;
+
+            order.Windows.Add(window);
+        }
+
+        CloseWindowModal();
+    }
+
+    private void AddElement()
+    {
+        element = new SubElement();
+        element.Id = window.SubElements.Count + 1;
+        elementAddEditAction = "Add";
+        disableElementDropdown = false;
+    }
+    private void EditElement(SubElement element)
+    {
+        this.element = element;
+        elementAddEditAction = "Edit";
+        disableElementDropdown = true;
+    }
+
+    private void RemoveElement(SubElement element)
+    {
+        window.SubElements.Remove(element);
+    }
+
+    private void SaveElement()
+    {
+        if (window.SubElements.Any(w => w.Id == element.Id))
+        {
+            var existingElement = window.SubElements.FirstOrDefault(w => w.Id == element.Id);
+
+            existingElement.Width = element.Width;
+            existingElement.Height = element.Height;
+        }
+        else
+        {
+            var newElement = elements.FirstOrDefault(w => w.Id == element.ElementId);
+
+            if (newElement != null)
+                element.Type = newElement.Type;
+
+            window.SubElements.Add(element);
+        }
+        AddElement();
+    }
+
+    private void ShowWindowModal()
+    {
+        showWindowModal = true;
+    }
+    private void CloseWindowModal()
+    {
+        showWindowModal = false;
+
+    }
+    private class OrderModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public string State { get; set; }
+        public List<Window> Windows { get; set; } = new List<Window>();
+    }
+
+    private class Window
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+        public int Quantity { get; set; }
+        public int TotalSubElements { get; set; }
+        public List<SubElement> SubElements { get; set; } = new List<SubElement>();
+    }
+
+    private class SubElement
+    {
+        public int Id { get; set; }
+        public int ElementId { get; set; }
+        public string Type { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
+    }
+
+    private List<Window> GeWindows()
+    {
+        return new List<Window>
+        {
+             new Window
+             {
+                 Id = 1,
+                 Name = "A51",
+             },
+             new Window
+             {
+                 Id = 2,
+                 Name = "C Zone 5",
+             },
+             new Window
+             {
+                 Id = 3,
+                 Name = "GLB",
+             },
+             new Window
+             {
+                 Id = 4,
+                 Name = "OHF",
+             }
+        };
+    }
+
+    private List<SubElement> GeElements()
+    {
+        return new List<SubElement>
+        {
+             new SubElement
+             {
+                 Id = 1,
+                 Type = "Doors",
+             },
+             new SubElement
+             {
+                 Id = 2,
+                 Type = "Window",
+             }
+        };
+    }
+}

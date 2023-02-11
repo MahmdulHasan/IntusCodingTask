@@ -1,4 +1,7 @@
-﻿@page "/addorder"
+﻿@page "/order/"
+@page "/order/{Id:int}"
+
+@using Intus.Web.Framework.Contracts.V1.Order;
 
 @inject NavigationManager NavigationManager;
 
@@ -148,11 +151,14 @@
 
 
 @code {
+    [Parameter]
+    public int Id { get; set; }
+
     private OrderModel order;
-    private Window window;
-    private SubElement element;
-    private List<Window> windows;
-    private List<SubElement> elements;
+    private WindowModel window;
+    private SubElementModel element;
+    private List<WindowModel> windows;
+    private List<SubElementModel> elements;
     private string windowModalTitle; 
     private bool showWindowModal = false;
     private string elementAddEditAction;
@@ -164,11 +170,17 @@
 
         try
         {
-            order = new OrderModel();
-            window = new Window();
-            element = new SubElement();
+            if (Id == 0)
+                order = new OrderModel();
+            else
+                order = GetOrder();
+
+            window = new WindowModel();
+            element = new SubElementModel();
+
             windows = GeWindows();
             elements = GeElements();
+
             // var response = await Http.GetJsonAsync<List<Order>>("<API endpoint for getting orders>");
             //  _orders = response;
         }
@@ -195,13 +207,13 @@
     }
     private void AddWindow()
     {
-        window = new Window();
+        window = new WindowModel();
         windowModalTitle = "New Widow";
         disableWindowDropdown = false;
         AddElement();
         ShowWindowModal();
     }
-    private void EditWindow(Window window)
+    private void EditWindow(WindowModel window)
     {
         this.window = window;
         windowModalTitle = "Edit Widow";
@@ -210,7 +222,7 @@
         ShowWindowModal();
     }
 
-    private void RemoveWindow(Window window)
+    private void RemoveWindow(WindowModel window)
     {
         order.Windows.Remove(window);
     }
@@ -238,19 +250,19 @@
 
     private void AddElement()
     {
-        element = new SubElement();
+        element = new SubElementModel();
         element.Id = window.SubElements.Count + 1;
         elementAddEditAction = "Add";
         disableElementDropdown = false;
     }
-    private void EditElement(SubElement element)
+    private void EditElement(SubElementModel element)
     {
         this.element = element;
         elementAddEditAction = "Edit";
         disableElementDropdown = true;
     }
 
-    private void RemoveElement(SubElement element)
+    private void RemoveElement(SubElementModel element)
     {
         window.SubElements.Remove(element);
     }
@@ -285,52 +297,27 @@
         showWindowModal = false;
 
     }
-    private class OrderModel
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string State { get; set; }
-        public List<Window> Windows { get; set; } = new List<Window>();
-    }
 
-    private class Window
+    private List<WindowModel> GeWindows()
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public int Quantity { get; set; }
-        public int TotalSubElements { get; set; }
-        public List<SubElement> SubElements { get; set; } = new List<SubElement>();
-    }
-
-    private class SubElement
-    {
-        public int Id { get; set; }
-        public int ElementId { get; set; }
-        public string Type { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
-    }
-
-    private List<Window> GeWindows()
-    {
-        return new List<Window>
+        return new List<WindowModel>
         {
-             new Window
+             new WindowModel
              {
                  Id = 1,
                  Name = "A51",
              },
-             new Window
+             new WindowModel
              {
                  Id = 2,
                  Name = "C Zone 5",
              },
-             new Window
+             new WindowModel
              {
                  Id = 3,
                  Name = "GLB",
              },
-             new Window
+             new WindowModel
              {
                  Id = 4,
                  Name = "OHF",
@@ -338,20 +325,83 @@
         };
     }
 
-    private List<SubElement> GeElements()
+    private List<SubElementModel> GeElements()
     {
-        return new List<SubElement>
+        return new List<SubElementModel>
         {
-             new SubElement
+             new SubElementModel
              {
                  Id = 1,
                  Type = "Doors",
              },
-             new SubElement
+             new SubElementModel
              {
                  Id = 2,
                  Type = "Window",
              }
         };
+    }
+
+    private OrderModel GetOrder()
+    {
+        return new OrderModel
+            {
+                Id = 1,
+                Name = "New York Building 1",
+                State = "NY",
+                Windows = new List<WindowModel>
+            {
+                new WindowModel
+                {
+                    Id = 1,
+                    Name = "A51",
+                    Quantity = 4,
+                    SubElements = new List<SubElementModel>
+                    {
+                        new SubElementModel
+                        {
+                            Id = 1,
+                            ElementId = 1,
+                            Type = "Doors",
+                            Width = 1200,
+                            Height = 1850
+                        },
+                        new SubElementModel
+                        {
+                            Id = 2,
+                            ElementId = 2,
+                            Type = "Window",
+                            Width = 800,
+                            Height = 1850
+                        },
+                        new SubElementModel
+                        {
+                            Id = 3,
+                            ElementId = 2,
+                            Type = "Window",
+                            Width = 700,
+                            Height = 1850
+                        }
+                    }
+                },
+                new WindowModel
+                {
+                    Id = 2,
+                    Name = "C Zone 5",
+                    Quantity = 2,
+                    SubElements = new List<SubElementModel>
+                    {
+                        new SubElementModel
+                        {
+                            Id = 1,
+                            ElementId = 2,
+                            Type = "Window",
+                            Width = 1500,
+                            Height = 2000
+                        }
+                    }
+                }
+            }
+            };
     }
 }

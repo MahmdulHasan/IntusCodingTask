@@ -1,5 +1,7 @@
 ﻿@page "/orders"
 
+@using Intus.Web.Framework.Contracts.V1.Order;
+
 @inject NavigationManager NavigationManager;
 
 <h3>Orders</h3>
@@ -34,10 +36,11 @@
 
 @code {
     private List<OrderModel> orders = new List<OrderModel>();
-
+    private OrderModel order = new OrderModel();
 
     protected override async Task OnInitializedAsync()
     {
+
 
         try
         {
@@ -52,86 +55,68 @@
     }
     private void RedirectToComponentAddOrder()
     {
-        NavigationManager.NavigateTo("/addorder");
+        NavigationManager.NavigateTo($"/order");
+    }
+
+    private void RedirectToComponentEditOrder()
+    {
+        NavigationManager.NavigateTo($"/order/{order.Id}");
     }
 
     private void EditOrder(OrderModel order)
     {
+        this.order = order;
 
-    }
-
-    private class OrderModel
-    {
-        public int Id { get; set; }
-        public string Name { get; set; }
-        public string State { get; set; }
-        public List<Window> Windows { get; set; } = new List<Window>();
-    }
-
-    private class Window
-    {
-        public string Name { get; set; }
-        public int QuantityOfWindows { get; set; }
-        public int TotalSubElements { get; set; }
-        public List<SubElement> SubElements { get; set; } = new List<SubElement>();
-    }
-
-    private class SubElement
-    {
-        public int Element { get; set; }
-        public string Type { get; set; }
-        public int Width { get; set; }
-        public int Height { get; set; }
+        RedirectToComponentEditOrder();
     }
 
     private OrderModel GetOrder()
     {
         return new OrderModel
         {
+                Id = 1,
                 Name = "New York Building 1",
                 State = "NY",
-                Windows = new List<Window>
+                Windows = new List<WindowModel>
             {
-                new Window
+                new WindowModel
                 {
                     Name = "A51",
-                    QuantityOfWindows = 4,
-                    TotalSubElements = 3,
-                    SubElements = new List<SubElement>
+                    Quantity = 4,
+                    SubElements = new List<SubElementModel>
                     {
-                        new SubElement
+                        new SubElementModel
                         {
-                            Element = 1,
+                            ElementId = 1,
                             Type = "Doors",
                             Width = 1200,
                             Height = 1850
                         },
-                        new SubElement
+                        new SubElementModel
                         {
-                            Element = 2,
+                            ElementId = 2,
                             Type = "Window",
                             Width = 800,
                             Height = 1850
                         },
-                        new SubElement
+                        new SubElementModel
                         {
-                            Element = 3,
+                            ElementId = 2,
                             Type = "Window",
                             Width = 700,
                             Height = 1850
                         }
                     }
                 },
-                new Window
+                new WindowModel
                 {
                     Name = "C Zone 5",
-                    QuantityOfWindows = 2,
-                    TotalSubElements = 1,
-                    SubElements = new List<SubElement>
+                    Quantity = 2,
+                    SubElements = new List<SubElementModel>
                     {
-                        new SubElement
+                        new SubElementModel
                         {
-                            Element = 1,
+                            ElementId = 2,
                             Type = "Window",
                             Width = 1500,
                             Height = 2000

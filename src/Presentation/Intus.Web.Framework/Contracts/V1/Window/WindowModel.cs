@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Intus.Web.Framework.Model
+namespace Intus.Web.Framework.Contracts.V1.Window
 {
     public class WindowModel
     {

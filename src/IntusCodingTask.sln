@@ -13,11 +13,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intus.Services", "Libraries
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Presentation", "Presentation", "{65813671-DB8A-4118-A577-0E98F3F4D8F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intus.Web.Framework", "Presentation\Intus.Web.Framework\Intus.Web.Framework.csproj", "{5FD07EF1-A849-4538-9541-ADD01C1A88AD}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intus.Web.Framework", "Presentation\Intus.Web.Framework\Intus.Web.Framework.csproj", "{5FD07EF1-A849-4538-9541-ADD01C1A88AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intus.Web.API", "Presentation\Intus.Web.API\Intus.Web.API.csproj", "{09BDFA3A-4BB7-4D31-9ABC-2663F64917EE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intus.Web.API", "Presentation\Intus.Web.API\Intus.Web.API.csproj", "{09BDFA3A-4BB7-4D31-9ABC-2663F64917EE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Intus.Web.Client", "Presentation\Intus.Web.Client\Intus.Web.Client.csproj", "{85243AAD-AD96-4D87-8218-057FCFCCB76F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Intus.Web.Client", "Presentation\Intus.Web.Client\Intus.Web.Client.csproj", "{85243AAD-AD96-4D87-8218-057FCFCCB76F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

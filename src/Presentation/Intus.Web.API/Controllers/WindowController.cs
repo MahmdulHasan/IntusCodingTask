@@ -68,7 +68,9 @@ namespace Intus.Web.API.Controllers
         {
             var window = await _windowService.GetWindowById(id);
 
-            await _windowService.DeleteWindow(window);
+            window.IsDeleted = true;
+
+            await _windowService.UpdateWindow(window);
 
             return Ok();
         }

@@ -31,7 +31,7 @@ namespace Intus.Services.Windows
             if (!string.IsNullOrWhiteSpace(name))
                 query = query.Where(v => v.Name.Contains(name));
 
-            if (showDeleted)
+            if (!showDeleted)
                 query = query.Where(v => !v.IsDeleted);
 
             return await query.ToListAsync();

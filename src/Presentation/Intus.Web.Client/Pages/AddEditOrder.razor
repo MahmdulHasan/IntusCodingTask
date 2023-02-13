@@ -5,6 +5,7 @@
 @using System.Text;
 @using System.Text.Json;
 @using Intus.Web.Framework.Contracts.V1.Window;
+@using Intus.Web.Framework.Contracts.V1.Element
 
 @inject NavigationManager NavigationManager;
 @inject HttpClient Http;
@@ -170,7 +171,7 @@
     private OrderWindowModel window;
     private OrderSubElementModel element;
     private List<WindowModel> windows;
-    private List<OrderSubElementModel> elements;
+    private List<ElementModel> elements;
     private string? orderAddEditAction;
     private string? windowModalTitle; 
     private bool showWindowModal = false;
@@ -193,7 +194,7 @@
             element = new OrderSubElementModel();
 
             windows = await GetWindows();
-            elements = GeElements();
+            elements = await GeElements();
 
         }
         catch (Exception ex)
@@ -307,7 +308,7 @@
     private void AddElement()
     {
         element = new OrderSubElementModel();
-        element.Id = window.SubElements.Count + 1;
+        element.Id = window.SubElements.Count() + 1;
         elementAddEditAction = "Add";
         disableElementDropdown = false;
     }
@@ -376,20 +377,19 @@
         return windows;
     }
 
-    private List<OrderSubElementModel> GeElements()
+    private async Task<List<ElementModel>> GeElements()
     {
-        return new List<OrderSubElementModel>
+        List<ElementModel> elements = null;
+
+        var response = await Http.GetAsync($"{baseAddress}api/v1/elements");
+
+        if (response.IsSuccessStatusCode)
         {
-             new OrderSubElementModel
-             {
-                 Id = 1,
-                 Type = "Doors",
-             },
-             new OrderSubElementModel
-             {
-                 Id = 2,
-                 Type = "Window",
-             }
-        };
+            var jsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            elements = await JsonSerializer.DeserializeAsync<List<ElementModel>>(await response.Content.ReadAsStreamAsync(), jsonSerializerOptions);
+        }
+
+        return elements;
     }
 }

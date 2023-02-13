@@ -4,6 +4,7 @@
 @using Intus.Web.Framework.Contracts.V1.Order;
 @using System.Text;
 @using System.Text.Json;
+@using Intus.Web.Framework.Contracts.V1.Window;
 
 @inject NavigationManager NavigationManager;
 @inject HttpClient Http;
@@ -81,10 +82,13 @@
 
                         <div class="form-group">
                             <label for="windows">Windows</label>
-                            <select class="form-control" id="windows" @bind="window.Id" disabled="@disableWindowDropdown">
-                                @foreach (var window in windows)
+                            <select class="form-control" id="windows" @bind="window.WindowId" disabled="@disableWindowDropdown">
+                                @if(windows.Count() > 0)
                                 {
-                                    <option value="@window.Id">@window.Name</option>
+                                    @foreach (var window in windows)
+                                    {
+                                        <option value="@window.Id">@window.Name</option>
+                                    }
                                 }
                             </select>
                         </div>
@@ -165,7 +169,7 @@
     private OrderModel? order;
     private OrderWindowModel window;
     private OrderSubElementModel element;
-    private List<OrderWindowModel> windows;
+    private List<WindowModel> windows;
     private List<OrderSubElementModel> elements;
     private string? orderAddEditAction;
     private string? windowModalTitle; 
@@ -188,7 +192,7 @@
             window = new OrderWindowModel();
             element = new OrderSubElementModel();
 
-            windows = GeWindows();
+            windows = await GetWindows();
             elements = GeElements();
 
         }
@@ -199,7 +203,7 @@
     }
     private void PrepareOrder()
     {
-        
+
     }
     private async Task SaveOrder()
     {
@@ -260,6 +264,7 @@
     {
         window = new OrderWindowModel();
         windowModalTitle = "New Widow";
+        window.Id = order.Windows.Count + 1;
         disableWindowDropdown = false;
         AddElement();
         ShowWindowModal();
@@ -288,7 +293,7 @@
         }
         else
         {
-            var newWindow = windows.FirstOrDefault(w => w.Id == window.Id);
+            var newWindow = windows.FirstOrDefault(w => w.Id == window.WindowId);
 
             if (newWindow != null)
                 window.Name = newWindow.Name;
@@ -355,31 +360,20 @@
         NavigationManager.NavigateTo("/orders");
     }
 
-    private List<OrderWindowModel> GeWindows()
+    private async Task<List<WindowModel>> GetWindows()
     {
-        return new List<OrderWindowModel>
+        List<WindowModel> windows = null;
+
+        var response = await Http.GetAsync($"{baseAddress}api/v1/windows");
+
+        if (response.IsSuccessStatusCode)
         {
-             new OrderWindowModel
-             {
-                 Id = 1,
-                 Name = "A51",
-             },
-             new OrderWindowModel
-             {
-                 Id = 2,
-                 Name = "C Zone 5",
-             },
-             new OrderWindowModel
-             {
-                 Id = 3,
-                 Name = "GLB",
-             },
-             new OrderWindowModel
-             {
-                 Id = 4,
-                 Name = "OHF",
-             }
-        };
+            var jsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            windows = await JsonSerializer.DeserializeAsync<List<WindowModel>>(await response.Content.ReadAsStreamAsync(), jsonSerializerOptions);
+        }
+
+        return windows;
     }
 
     private List<OrderSubElementModel> GeElements()

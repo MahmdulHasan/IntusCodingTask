@@ -1,6 +1,5 @@
 ﻿using Intus.Core.Entities;
 using Intus.Services.Orders;
-using Intus.Web.Framework.Contracts.V1.Element;
 using Intus.Web.Framework.Contracts.V1.Order;
 
 namespace Intus.Web.API.Controllers
@@ -32,12 +31,13 @@ namespace Intus.Web.API.Controllers
                 Id = order.Id,
                 Name = order.Name,
                 State = order.State,
-                Windows = order.OrderWindows.Select(window => new OrderWindowModel
+                Windows = order.OrderWindows.Select(orderWindow => new OrderWindowModel
                 {
-                    Id = window.Id,
-                    Name = window.Window.Name,
-                    Quantity = window.Quantity,
-                    SubElements = window.OrderSubElements.Select(subElement => new OrderSubElementModel
+                    Id = orderWindow.Id,
+                    WindowId = orderWindow.WindowId,
+                    Name = orderWindow.Window.Name,
+                    Quantity = orderWindow.Quantity,
+                    SubElements = orderWindow.OrderSubElements.Select(subElement => new OrderSubElementModel
                     {
                         Id = subElement.Id,
                         ElementId = subElement.ElementId,
@@ -56,15 +56,18 @@ namespace Intus.Web.API.Controllers
             {
                 Name = model.Name,
                 State = model.State,
+                CreateDate = DateTime.UtcNow,
                 OrderWindows = model.Windows.Select(window => new OrderWindow
                 {
-                    WindowId = window.Id,
+                    WindowId = window.WindowId,
                     Quantity = window.Quantity,
+                    CreateDate = DateTime.UtcNow,
                     OrderSubElements = window.SubElements.Select(subElement => new OrderSubElement
                     {
                         ElementId = subElement.ElementId,
                         Width = subElement.Width,
-                        Height = subElement.Height
+                        Height = subElement.Height,
+                        CreateDate = DateTime.UtcNow,
                     }).ToList()
                 }).ToList()
             };
@@ -80,6 +83,20 @@ namespace Intus.Web.API.Controllers
 
             order.Name = model.Name;
             order.State = model.State;
+            order.UpdateDate = DateTime.UtcNow;
+
+            var orderWindows = order.OrderWindows.ToList();
+
+            foreach (var orderWindowModel in model.Windows)
+            {
+                var orderWindow = orderWindows.FirstOrDefault(w => w.Id == orderWindowModel.Id);
+
+                if (orderWindow is null)
+                    continue;
+
+                orderWindow.Quantity = orderWindowModel.Quantity;
+                orderWindow.UpdateDate = DateTime.UtcNow;
+            }
 
             var subElements = order.OrderWindows.SelectMany(s => s.OrderSubElements).ToList();
 
@@ -92,11 +109,26 @@ namespace Intus.Web.API.Controllers
 
                 subelement.Width = subElementModel.Width;
                 subelement.Height = subElementModel.Height;
+                subelement.UpdateDate = DateTime.UtcNow;
+            }
+        }
+        private static void EnableDeleteFlag(Order? order)
+        {
+            order.IsDeleted = true;
+            order.UpdateDate = DateTime.UtcNow;
+
+            foreach (var orderWindow in order.OrderWindows)
+            {
+                orderWindow.IsDeleted = true;
+                orderWindow.UpdateDate = DateTime.UtcNow;
             }
 
-            order.UpdateDate = DateTime.UtcNow;
+            foreach (var prderSubElement in order.OrderWindows.SelectMany(s => s.OrderSubElements))
+            {
+                prderSubElement.IsDeleted = true;
+                prderSubElement.UpdateDate = DateTime.UtcNow;
+            }
         }
-
         #endregion
 
 
@@ -157,12 +189,13 @@ namespace Intus.Web.API.Controllers
         {
             var order = await _orderService.GetOrderById(id);
 
-            order.IsDeleted = true;
+            EnableDeleteFlag(order);
 
             await _orderService.UpdateOrder(order);
 
             return Ok();
-        } 
+        }
+        
         #endregion
     }
 }

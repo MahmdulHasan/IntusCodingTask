@@ -1,9 +1,6 @@
 ﻿using Intus.Core.Entities;
 using Intus.Services.Elements;
-using Intus.Services.Windows;
 using Intus.Web.Framework.Contracts.V1.Element;
-
-// For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Intus.Web.API.Controllers
 {

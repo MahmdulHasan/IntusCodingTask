@@ -1,6 +1,7 @@
 ﻿using Intus.Data;
 using Intus.Data.Repository;
 using Intus.Services.Elements;
+using Intus.Services.Orders;
 using Intus.Services.Windows;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -23,6 +24,7 @@ namespace Intus.Web.Framework.Extension
             services.AddScoped(typeof(IRepository<>), typeof(ApplicationDbRepository<>));
             services.AddScoped<IWindowService, WindowService>();
             services.AddScoped<IElementService, ElementService>();
+            services.AddScoped<IOrderService, OrderService>();
             
         }
     }

@@ -12,6 +12,6 @@ namespace Intus.Web.Framework.Contracts.V1.Order
         public int Id { get; set; }
         public string Name { get; set; }
         public string State { get; set; }
-        public List<WindowModel> Windows { get; set; } = new List<WindowModel>();
+        public List<OrderWindowModel> Windows { get; set; } = new List<OrderWindowModel>();
     }
 }

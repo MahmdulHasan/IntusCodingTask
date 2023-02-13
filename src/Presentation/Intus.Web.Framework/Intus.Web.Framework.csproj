@@ -7,8 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Libraries\Intus.Core\Intus.Core.csproj" />
-    <ProjectReference Include="..\..\Libraries\Intus.Data\Intus.Data.csproj" />
     <ProjectReference Include="..\..\Libraries\Intus.Services\Intus.Services.csproj" />
   </ItemGroup>
 

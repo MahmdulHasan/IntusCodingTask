@@ -6,11 +6,12 @@ using System.Threading.Tasks;
 
 namespace Intus.Web.Framework.Contracts.V1.Order
 {
-    public class WindowModel
+    public class OrderSubElementModel
     {
         public int Id { get; set; }
-        public string Name { get; set; }
-        public int Quantity { get; set; }
-        public List<SubElementModel> SubElements { get; set; } = new List<SubElementModel>();
+        public int ElementId { get; set; }
+        public string Type { get; set; }
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }

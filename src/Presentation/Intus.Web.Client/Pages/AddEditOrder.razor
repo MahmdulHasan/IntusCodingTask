@@ -2,22 +2,28 @@
 @page "/order/{Id:int}"
 
 @using Intus.Web.Framework.Contracts.V1.Order;
+@using System.Text;
+@using System.Text.Json;
 
 @inject NavigationManager NavigationManager;
+@inject HttpClient Http;
 
 <div style="display: flex; justify-content: space-between;">
-    <h3 style="margin-right: auto;">Add Order</h3>
+    <h3 style="margin-right: auto;">@orderAddEditAction Order</h3>
     <button class="btn btn-primary" @onclick="RedirectToComponentOrder">Back</button>
 </div>
 
-<div class="form-group mt-3">
-    <label for="orderName">Order Name</label>
-    <input type="text" class="form-control" id="orderName" @bind-value="order.Name" />
-</div>
-<div class="form-group">
-    <label for="orderState">Order State</label>
-    <input type="text" class="form-control" id="orderState" @bind-value="order.State" />
-</div>
+@if (order != null)
+{
+    <div class="form-group mt-3">
+        <label for="orderName">Order Name</label>
+        <input type="text" class="form-control" id="orderName" @bind-value="order.Name" />
+    </div>
+    <div class="form-group">
+        <label for="orderState">Order State</label>
+        <input type="text" class="form-control" id="orderState" @bind-value="order.State" />
+    </div>
+}
 
 <div class="mt-5">
     <div class="d-flex justify-content-lg-start">
@@ -40,7 +46,7 @@
         </tr>
     </thead>
     <tbody>
-        @if (order.Windows.Count > 0)
+        @if (order?.Windows != null)
         {
             @foreach (var window in order.Windows)
             {
@@ -123,6 +129,7 @@
                                 </tr>
                             </thead>
                             <tbody>
+
                                 @foreach (var element in window.SubElements)
                                 {
                                     <tr>
@@ -135,6 +142,7 @@
                                         </td>
                                     </tr>
                                 }
+
                             </tbody>
                         </table>
                     </form>
@@ -154,66 +162,107 @@
     [Parameter]
     public int Id { get; set; }
 
-    private OrderModel order;
-    private WindowModel window;
-    private SubElementModel element;
-    private List<WindowModel> windows;
-    private List<SubElementModel> elements;
-    private string windowModalTitle; 
+    private OrderModel? order;
+    private OrderWindowModel window;
+    private OrderSubElementModel element;
+    private List<OrderWindowModel> windows;
+    private List<OrderSubElementModel> elements;
+    private string? orderAddEditAction;
+    private string? windowModalTitle; 
     private bool showWindowModal = false;
-    private string elementAddEditAction;
+    private string? elementAddEditAction;
     private bool disableWindowDropdown = false;
     private bool disableElementDropdown = false;
+    private string baseAddress = "https://localhost:7201/";
 
     protected override async Task OnInitializedAsync()
     {
 
         try
         {
-            if (Id == 0)
-                order = new OrderModel();
-            else
-                order = GetOrder();
+            order = Id == 0 ? new OrderModel() : await GetOrder();
+            orderAddEditAction = Id == 0 ? "Add" : "Edit";
 
-            window = new WindowModel();
-            element = new SubElementModel();
+            window = new OrderWindowModel();
+            element = new OrderSubElementModel();
 
             windows = GeWindows();
             elements = GeElements();
 
-            // var response = await Http.GetJsonAsync<List<Order>>("<API endpoint for getting orders>");
-            //  _orders = response;
         }
         catch (Exception ex)
         {
 
         }
     }
-    private void RedirectToComponentOrder()
+    private void PrepareOrder()
     {
-        NavigationManager.NavigateTo("/orders");
+        
     }
-
     private async Task SaveOrder()
     {
 
-        if (order.Id == 0)
+        if (order?.Id == 0)
         {
-            //await Http.PostJsonAsync("<API endpoint for adding order>", order);
+            await CreateOrder(order);
+        }
+        else
+        {
+            await UpdateOrder(order);
+        }
+    }
+
+    private async Task<OrderModel?> GetOrder()
+    {
+
+        OrderModel? orderModel = null;
+
+        var response = await Http.GetAsync($"{baseAddress}api/v1/orders/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            orderModel = await JsonSerializer.DeserializeAsync<OrderModel>(await response.Content.ReadAsStreamAsync(), jsonSerializerOptions);
         }
 
-        //var response = await Http.GetJsonAsync<List<Order>>("<API endpoint for getting orders>");
-        // _orders = response;
+        return orderModel;
     }
+
+    private async Task CreateOrder(OrderModel order)
+    {
+
+        var json = JsonSerializer.Serialize(order);
+        var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await Http.PostAsync($"{baseAddress}api/v1/orders", stringContent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            RedirectToComponentOrder();
+        }
+    }
+
+    private async Task UpdateOrder(OrderModel order)
+    {
+        var json = JsonSerializer.Serialize(order);
+        var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await Http.PutAsync($"{baseAddress}api/v1/orders/{window.Id}", stringContent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            RedirectToComponentOrder();
+        }
+    }
+
     private void AddWindow()
     {
-        window = new WindowModel();
+        window = new OrderWindowModel();
         windowModalTitle = "New Widow";
         disableWindowDropdown = false;
         AddElement();
         ShowWindowModal();
     }
-    private void EditWindow(WindowModel window)
+    private void EditWindow(OrderWindowModel window)
     {
         this.window = window;
         windowModalTitle = "Edit Widow";
@@ -222,7 +271,7 @@
         ShowWindowModal();
     }
 
-    private void RemoveWindow(WindowModel window)
+    private void RemoveWindow(OrderWindowModel window)
     {
         order.Windows.Remove(window);
     }
@@ -250,19 +299,19 @@
 
     private void AddElement()
     {
-        element = new SubElementModel();
+        element = new OrderSubElementModel();
         element.Id = window.SubElements.Count + 1;
         elementAddEditAction = "Add";
         disableElementDropdown = false;
     }
-    private void EditElement(SubElementModel element)
+    private void EditElement(OrderSubElementModel element)
     {
         this.element = element;
         elementAddEditAction = "Edit";
         disableElementDropdown = true;
     }
 
-    private void RemoveElement(SubElementModel element)
+    private void RemoveElement(OrderSubElementModel element)
     {
         window.SubElements.Remove(element);
     }
@@ -292,32 +341,38 @@
     {
         showWindowModal = true;
     }
+
     private void CloseWindowModal()
     {
         showWindowModal = false;
 
     }
 
-    private List<WindowModel> GeWindows()
+    private void RedirectToComponentOrder()
     {
-        return new List<WindowModel>
+        NavigationManager.NavigateTo("/orders");
+    }
+
+    private List<OrderWindowModel> GeWindows()
+    {
+        return new List<OrderWindowModel>
         {
-             new WindowModel
+             new OrderWindowModel
              {
                  Id = 1,
                  Name = "A51",
              },
-             new WindowModel
+             new OrderWindowModel
              {
                  Id = 2,
                  Name = "C Zone 5",
              },
-             new WindowModel
+             new OrderWindowModel
              {
                  Id = 3,
                  Name = "GLB",
              },
-             new WindowModel
+             new OrderWindowModel
              {
                  Id = 4,
                  Name = "OHF",
@@ -325,83 +380,20 @@
         };
     }
 
-    private List<SubElementModel> GeElements()
+    private List<OrderSubElementModel> GeElements()
     {
-        return new List<SubElementModel>
+        return new List<OrderSubElementModel>
         {
-             new SubElementModel
+             new OrderSubElementModel
              {
                  Id = 1,
                  Type = "Doors",
              },
-             new SubElementModel
+             new OrderSubElementModel
              {
                  Id = 2,
                  Type = "Window",
              }
         };
-    }
-
-    private OrderModel GetOrder()
-    {
-        return new OrderModel
-            {
-                Id = 1,
-                Name = "New York Building 1",
-                State = "NY",
-                Windows = new List<WindowModel>
-            {
-                new WindowModel
-                {
-                    Id = 1,
-                    Name = "A51",
-                    Quantity = 4,
-                    SubElements = new List<SubElementModel>
-                    {
-                        new SubElementModel
-                        {
-                            Id = 1,
-                            ElementId = 1,
-                            Type = "Doors",
-                            Width = 1200,
-                            Height = 1850
-                        },
-                        new SubElementModel
-                        {
-                            Id = 2,
-                            ElementId = 2,
-                            Type = "Window",
-                            Width = 800,
-                            Height = 1850
-                        },
-                        new SubElementModel
-                        {
-                            Id = 3,
-                            ElementId = 2,
-                            Type = "Window",
-                            Width = 700,
-                            Height = 1850
-                        }
-                    }
-                },
-                new WindowModel
-                {
-                    Id = 2,
-                    Name = "C Zone 5",
-                    Quantity = 2,
-                    SubElements = new List<SubElementModel>
-                    {
-                        new SubElementModel
-                        {
-                            Id = 1,
-                            ElementId = 2,
-                            Type = "Window",
-                            Width = 1500,
-                            Height = 2000
-                        }
-                    }
-                }
-            }
-            };
     }
 }

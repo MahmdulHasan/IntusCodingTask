@@ -31,13 +31,13 @@ namespace Intus.Web.API.Controllers
                 Id = order.Id,
                 Name = order.Name,
                 State = order.State,
-                Windows = order.OrderWindows.Select(orderWindow => new OrderWindowModel
+                Windows = order.OrderWindows.Where(w=> !w.IsDeleted).Select(orderWindow => new OrderWindowModel
                 {
                     Id = orderWindow.Id,
                     WindowId = orderWindow.WindowId,
                     Name = orderWindow.Window.Name,
                     Quantity = orderWindow.Quantity,
-                    SubElements = orderWindow.OrderSubElements.Select(subElement => new OrderSubElementModel
+                    SubElements = orderWindow.OrderSubElements.Where(w => !w.IsDeleted).Select(subElement => new OrderSubElementModel
                     {
                         Id = subElement.Id,
                         ElementId = subElement.ElementId,
@@ -50,6 +50,23 @@ namespace Intus.Web.API.Controllers
             };
         }
 
+        OrderWindow PrepareOrderWindow(OrderWindowModel model)
+        {
+            return new OrderWindow
+            {
+                WindowId = model.WindowId,
+                Quantity = model.Quantity,
+                CreateDate = DateTime.UtcNow,
+                OrderSubElements = model.SubElements.Select(subElement => new OrderSubElement
+                {
+                    ElementId = subElement.ElementId,
+                    Width = subElement.Width,
+                    Height = subElement.Height,
+                    CreateDate = DateTime.UtcNow,
+                }).ToList()
+            };
+        }
+
         Order PrepareOrder(OrderModel model)
         {
             return new Order
@@ -57,29 +74,19 @@ namespace Intus.Web.API.Controllers
                 Name = model.Name,
                 State = model.State,
                 CreateDate = DateTime.UtcNow,
-                OrderWindows = model.Windows.Select(window => new OrderWindow
-                {
-                    WindowId = window.WindowId,
-                    Quantity = window.Quantity,
-                    CreateDate = DateTime.UtcNow,
-                    OrderSubElements = window.SubElements.Select(subElement => new OrderSubElement
-                    {
-                        ElementId = subElement.ElementId,
-                        Width = subElement.Width,
-                        Height = subElement.Height,
-                        CreateDate = DateTime.UtcNow,
-                    }).ToList()
-                }).ToList()
+                OrderWindows = model.Windows.Select(window => PrepareOrderWindow(window)).ToList()
             };
         }
 
-        private static void MapOrderModelToOrder(OrderModel model, Order? order)
+        private void MapOrderModelToOrder(OrderModel model, Order? order)
         {
             if(model is null )
                 ArgumentNullException.ThrowIfNull(nameof(OrderModel));
 
             if (order is null)
                 ArgumentNullException.ThrowIfNull(nameof(Order));
+
+
 
             order.Name = model.Name;
             order.State = model.State;
@@ -91,28 +98,67 @@ namespace Intus.Web.API.Controllers
             {
                 var orderWindow = orderWindows.FirstOrDefault(w => w.Id == orderWindowModel.Id);
 
-                if (orderWindow is null)
-                    continue;
+                if (orderWindow is null) 
+                {
+                    var newOrderWindow = PrepareOrderWindow(orderWindowModel);
+                    order.OrderWindows.Add(newOrderWindow);
 
+                    continue;
+                }
+                 
                 orderWindow.Quantity = orderWindowModel.Quantity;
                 orderWindow.UpdateDate = DateTime.UtcNow;
+
+                var orderSubElements = model.Windows.Where(w => w.Id == orderWindow.Id)
+                                               .SelectMany(s => s.SubElements);
+
+                foreach (var subElementModel in orderSubElements)
+                {
+                    var subelement = orderWindow.OrderSubElements.FirstOrDefault(w => w.Id == subElementModel.Id);
+
+                    if (subelement is null)
+                    {
+                        orderWindow.OrderSubElements.Add(new OrderSubElement
+                        {
+                            ElementId = subElementModel.ElementId,
+                            Width = subElementModel.Width,
+                            Height = subElementModel.Height,
+                            CreateDate = DateTime.UtcNow
+                        });
+
+                        continue;
+                    }
+
+                    subelement.Width = subElementModel.Width;
+                    subelement.Height = subElementModel.Height;
+                    subelement.UpdateDate = DateTime.UtcNow;
+                }
             }
 
             var subElements = order.OrderWindows.SelectMany(s => s.OrderSubElements).ToList();
 
-            foreach (var subElementModel in model.Windows.SelectMany(s => s.SubElements))
+
+
+            var deletedWindows = orderWindows.Where(w => !model.Windows.Select(s => s.Id).Contains(w.Id) && w.Id != 0);
+                                                    
+
+            var deletedSubElements = subElements.Where(w => !model.Windows.SelectMany(s => s.SubElements)
+                                                                          .Select(s => s.Id).Contains(w.Id)
+                                                                          && w.Id != 0);
+            foreach (var orderWindow in deletedWindows)
             {
-                var subelement = subElements.FirstOrDefault(w => w.Id == subElementModel.Id);
-
-                if (subelement is null)
-                    continue;
-
-                subelement.Width = subElementModel.Width;
-                subelement.Height = subElementModel.Height;
-                subelement.UpdateDate = DateTime.UtcNow;
+                orderWindow.IsDeleted = true;
+                orderWindow.UpdateDate = DateTime.UtcNow;
             }
+
+            foreach (var subElement in deletedSubElements.Where(w => w.Id != 0))
+            {
+                subElement.IsDeleted = true;
+                subElement.UpdateDate = DateTime.UtcNow;
+            }
+
         }
-        private static void EnableDeleteFlag(Order? order)
+        private void EnableDeleteFlag(Order? order)
         {
             order.IsDeleted = true;
             order.UpdateDate = DateTime.UtcNow;

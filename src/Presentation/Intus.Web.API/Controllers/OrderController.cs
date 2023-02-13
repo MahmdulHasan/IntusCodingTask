@@ -67,6 +67,17 @@ namespace Intus.Web.API.Controllers
             };
         }
 
+        OrderSubElement PrepareOrderSubElement(OrderSubElementModel subElementModel)
+        {
+            return new OrderSubElement
+            {
+                ElementId = subElementModel.ElementId,
+                Width = subElementModel.Width,
+                Height = subElementModel.Height,
+                CreateDate = DateTime.UtcNow
+            };
+        }
+
         Order PrepareOrder(OrderModel model)
         {
             return new Order
@@ -80,13 +91,11 @@ namespace Intus.Web.API.Controllers
 
         private void MapOrderModelToOrder(OrderModel model, Order? order)
         {
-            if(model is null )
+            if (model is null)
                 ArgumentNullException.ThrowIfNull(nameof(OrderModel));
 
             if (order is null)
                 ArgumentNullException.ThrowIfNull(nameof(Order));
-
-
 
             order.Name = model.Name;
             order.State = model.State;
@@ -94,53 +103,17 @@ namespace Intus.Web.API.Controllers
 
             var orderWindows = order.OrderWindows.ToList();
 
-            foreach (var orderWindowModel in model.Windows)
-            {
-                var orderWindow = orderWindows.FirstOrDefault(w => w.Id == orderWindowModel.Id);
+            MapWindowModelToWindowWithSubElements(model, order, orderWindows);
 
-                if (orderWindow is null) 
-                {
-                    var newOrderWindow = PrepareOrderWindow(orderWindowModel);
-                    order.OrderWindows.Add(newOrderWindow);
+            RemoveDeletedWindowsAndSubElements(model, order, orderWindows);
 
-                    continue;
-                }
-                 
-                orderWindow.Quantity = orderWindowModel.Quantity;
-                orderWindow.UpdateDate = DateTime.UtcNow;
+        }
 
-                var orderSubElements = model.Windows.Where(w => w.Id == orderWindow.Id)
-                                               .SelectMany(s => s.SubElements);
-
-                foreach (var subElementModel in orderSubElements)
-                {
-                    var subelement = orderWindow.OrderSubElements.FirstOrDefault(w => w.Id == subElementModel.Id);
-
-                    if (subelement is null)
-                    {
-                        orderWindow.OrderSubElements.Add(new OrderSubElement
-                        {
-                            ElementId = subElementModel.ElementId,
-                            Width = subElementModel.Width,
-                            Height = subElementModel.Height,
-                            CreateDate = DateTime.UtcNow
-                        });
-
-                        continue;
-                    }
-
-                    subelement.Width = subElementModel.Width;
-                    subelement.Height = subElementModel.Height;
-                    subelement.UpdateDate = DateTime.UtcNow;
-                }
-            }
-
+        private static void RemoveDeletedWindowsAndSubElements(OrderModel model, Order? order, List<OrderWindow> orderWindows)
+        {
             var subElements = order.OrderWindows.SelectMany(s => s.OrderSubElements).ToList();
 
-
-
             var deletedWindows = orderWindows.Where(w => !model.Windows.Select(s => s.Id).Contains(w.Id) && w.Id != 0);
-                                                    
 
             var deletedSubElements = subElements.Where(w => !model.Windows.SelectMany(s => s.SubElements)
                                                                           .Select(s => s.Id).Contains(w.Id)
@@ -156,8 +129,46 @@ namespace Intus.Web.API.Controllers
                 subElement.IsDeleted = true;
                 subElement.UpdateDate = DateTime.UtcNow;
             }
-
         }
+
+        private void MapWindowModelToWindowWithSubElements(OrderModel model, Order? order, List<OrderWindow> orderWindows)
+        {
+            foreach (var orderWindowModel in model.Windows)
+            {
+                var orderWindow = orderWindows.FirstOrDefault(w => w.Id == orderWindowModel.Id);
+
+                if (orderWindow is null)
+                {
+                    var newOrderWindow = PrepareOrderWindow(orderWindowModel);
+                    order.OrderWindows.Add(newOrderWindow);
+
+                    continue;
+                }
+
+                orderWindow.Quantity = orderWindowModel.Quantity;
+                orderWindow.UpdateDate = DateTime.UtcNow;
+
+                var orderSubElements = model.Windows.Where(w => w.Id == orderWindow.Id)
+                                               .SelectMany(s => s.SubElements);
+
+                foreach (var subElementModel in orderSubElements)
+                {
+                    var subelement = orderWindow.OrderSubElements.FirstOrDefault(w => w.Id == subElementModel.Id);
+
+                    if (subelement is null)
+                    {
+                        orderWindow.OrderSubElements.Add(PrepareOrderSubElement(subElementModel));
+
+                        continue;
+                    }
+
+                    subelement.Width = subElementModel.Width;
+                    subelement.Height = subElementModel.Height;
+                    subelement.UpdateDate = DateTime.UtcNow;
+                }
+            }
+        }
+
         private void EnableDeleteFlag(Order? order)
         {
             order.IsDeleted = true;
@@ -176,7 +187,6 @@ namespace Intus.Web.API.Controllers
             }
         }
         #endregion
-
 
         #region Methods
 

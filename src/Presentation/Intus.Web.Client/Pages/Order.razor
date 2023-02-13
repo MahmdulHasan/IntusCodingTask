@@ -53,11 +53,14 @@
     private List<OrderModel>? orders;
     private OrderModel order = new OrderModel();
     private string baseAddress = "https://localhost:7201/";
+    private string? apiUrl;
 
     protected override async Task OnInitializedAsync()
     {
         try
         {
+            apiUrl = $"{baseAddress}api/v1/orders";
+
             await GetOrders();
         }
         catch(Exception ex)
@@ -67,7 +70,7 @@
     }
     private async Task GetOrders()
     {
-        var response = await Http.GetAsync($"{baseAddress}api/v1/orders");
+        var response = await Http.GetAsync(apiUrl);
 
         if (response.IsSuccessStatusCode)
         {
@@ -96,7 +99,7 @@
 
     private async Task DeleteOrder(OrderModel order)
     {
-        await Http.DeleteAsync($"{baseAddress}api/v1/orders/{order.Id}");
+        await Http.DeleteAsync($"{apiUrl}/{order.Id}");
 
         await GetOrders();
     }

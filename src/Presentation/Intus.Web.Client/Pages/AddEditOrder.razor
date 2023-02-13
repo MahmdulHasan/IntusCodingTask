@@ -174,12 +174,14 @@
     private bool disableWindowDropdown = false;
     private bool disableElementDropdown = false;
     private string baseAddress = "https://localhost:7201/";
+    private string? apiUrl;
 
     protected override async Task OnInitializedAsync()
     {
 
         try
         {
+            apiUrl = $"{baseAddress}api/v1/orders";
             order = Id == 0 ? new OrderModel() : await GetOrder();
             orderAddEditAction = Id == 0 ? "Add" : "Edit";
 
@@ -217,7 +219,7 @@
 
         OrderModel? orderModel = null;
 
-        var response = await Http.GetAsync($"{baseAddress}api/v1/orders/{Id}");
+        var response = await Http.GetAsync($"{apiUrl}/{Id}");
 
         if (response.IsSuccessStatusCode)
         {
@@ -234,7 +236,7 @@
 
         var json = JsonSerializer.Serialize(order);
         var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await Http.PostAsync($"{baseAddress}api/v1/orders", stringContent);
+        var response = await Http.PostAsync(apiUrl, stringContent);
 
         if (response.IsSuccessStatusCode)
         {
@@ -246,7 +248,7 @@
     {
         var json = JsonSerializer.Serialize(order);
         var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await Http.PutAsync($"{baseAddress}api/v1/orders/{window.Id}", stringContent);
+        var response = await Http.PutAsync($"{apiUrl}/{Id}", stringContent);
 
         if (response.IsSuccessStatusCode)
         {

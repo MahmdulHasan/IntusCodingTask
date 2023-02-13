@@ -7,7 +7,7 @@ using Intus.Web.Framework.Contracts.V1.Window;
 
 namespace Intus.Web.API.Controllers
 {
-    [Route("api/windows")]
+    [Route("api/v1/windows")]
     [ApiController]
     public class WindowController : ControllerBase
     {

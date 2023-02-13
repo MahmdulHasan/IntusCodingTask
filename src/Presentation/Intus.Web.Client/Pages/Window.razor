@@ -57,14 +57,15 @@
     private List<WindowModel>? windows;
     private WindowModel window;
     private string actionName = "Create";
-
     private string baseAddress = "https://localhost:7201/";
+    private string? apiUrl;
 
     protected override async Task OnInitializedAsync()
 
     {
         try
         {
+            apiUrl = $"{baseAddress}api/v1/windows";
             window = PrepareNewWindowModel();
 
             await GetWindows();
@@ -77,7 +78,7 @@
 
     private async Task GetWindows()
     {
-        var response = await Http.GetAsync($"{baseAddress}api/windows");
+        var response = await Http.GetAsync(apiUrl);
 
         if (response.IsSuccessStatusCode)
         {
@@ -113,7 +114,7 @@
 
         var json = JsonSerializer.Serialize(window);
         var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await Http.PostAsync($"{baseAddress}api/windows", stringContent);
+        var response = await Http.PostAsync(apiUrl, stringContent);
 
         if (response.IsSuccessStatusCode)
         {
@@ -126,7 +127,7 @@
     {
         var json = JsonSerializer.Serialize(window);
         var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await Http.PutAsync($"{baseAddress}api/windows/{window.Id}", stringContent);
+        var response = await Http.PutAsync($"{apiUrl}/{window.Id}", stringContent);
 
         if (response.IsSuccessStatusCode)
         {
@@ -137,7 +138,7 @@
 
     private async Task DeleteWindow(WindowModel window)
     {
-        await Http.DeleteAsync($"{baseAddress}api/windows/{window.Id}");
+        await Http.DeleteAsync($"{apiUrl}/{window.Id}");
 
         await GetWindows();
     }

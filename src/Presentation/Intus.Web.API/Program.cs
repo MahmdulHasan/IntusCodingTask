@@ -1,4 +1,6 @@
+using Intus.Data;
 using Intus.Web.Framework.Extension;
+using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +13,12 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddCors();
 builder.Services.ConfigureApplicationServices(builder.Configuration);
 var app = builder.Build();
+
+using var scope = app.Services.CreateScope();
+await using var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+await dbContext.Database.MigrateAsync();
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

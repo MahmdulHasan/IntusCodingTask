@@ -265,7 +265,7 @@
     {
         window = new OrderWindowModel();
         windowModalTitle = "New Widow";
-        window.Id = order.Windows.Count + 1;
+        window.Id = order.Windows.Count() > 0 ? order.Windows.Last().Id + 1 : 1;
         disableWindowDropdown = false;
         AddElement();
         ShowWindowModal();
@@ -308,7 +308,7 @@
     private void AddElement()
     {
         element = new OrderSubElementModel();
-        element.Id = window.SubElements.Count() + 1;
+        element.Id = window.SubElements.Count() > 0 ? window.SubElements.Last().Id + 1 : 1;
         elementAddEditAction = "Add";
         disableElementDropdown = false;
     }

@@ -1,0 +1,395 @@
+﻿@page "/order/"
+@page "/order/{Id:int}"
+
+@using Intus.Web.Framework.Contracts.V1.Order;
+@using System.Text;
+@using System.Text.Json;
+@using Intus.Web.Framework.Contracts.V1.Window;
+@using Intus.Web.Framework.Contracts.V1.Element
+
+@inject NavigationManager NavigationManager;
+@inject HttpClient Http;
+
+<div style="display: flex; justify-content: space-between;">
+    <h3 style="margin-right: auto;">@orderAddEditAction Order</h3>
+    <button class="btn btn-primary" @onclick="RedirectToComponentOrder">Back</button>
+</div>
+
+@if (order != null)
+{
+    <div class="form-group mt-3">
+        <label for="orderName">Order Name</label>
+        <input type="text" class="form-control" id="orderName" @bind-value="order.Name" />
+    </div>
+    <div class="form-group">
+        <label for="orderState">Order State</label>
+        <input type="text" class="form-control" id="orderState" @bind-value="order.State" />
+    </div>
+}
+
+<div class="mt-5">
+    <div class="d-flex justify-content-lg-start">
+       <h3>Windows</h3>
+    </div>
+    <div class="d-flex justify-content-lg-end">
+        <button class="btn btn-primary" @onclick="AddWindow">New Window</button>
+    </div>
+</div>
+
+
+
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Quantity</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (order?.Windows != null)
+        {
+            @foreach (var window in order.Windows)
+            {
+                <tr>
+                    <td>@window.Name</td>
+                    <td>@window.Quantity</td>
+                    <td>
+                        <button type="button" class="btn btn-primary btn-sm" @onclick="(() => EditWindow(window))">Edit</button>
+                        <button type="button" class="btn btn-danger btn-sm" @onclick="(() => RemoveWindow(window))">Remove</button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+<button class="btn btn-primary" @onclick="SaveOrder">Save Order</button>
+
+@if (showWindowModal)
+{
+    <div class="modal" tabindex="-1" role="dialog" style=" display:block;">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-title" id="wiModalTitle">@windowModalTitle</h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="CloseWindowModal">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+
+                        <div class="form-group">
+                            <label for="windows">Windows</label>
+                            <select class="form-control" id="windows" @bind="window.WindowId" disabled="@disableWindowDropdown">
+                                @if(windows.Count() > 0)
+                                {
+                                    @foreach (var window in windows)
+                                    {
+                                        <option value="@window.Id">@window.Name</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="quantity">Quantity</label>
+                            <input type="text" class="form-control" id="quantity" @bind-value="window.Quantity" />
+                        </div>
+
+                        <h5 class="mt-3">@elementAddEditAction Sub Elememnts</h5>
+                        
+                        <div class="d-flex flex-row justify-content-between">
+                            <div class="form-group">
+                                <label for="elements">Type</label>
+                                <select class="form-control" id="elements" @bind="element.ElementId" style="width:200px" disabled="@disableElementDropdown">
+                                    @foreach (var element in elements)
+                                    {
+                                        <option value="@element.Id">@element.Type</option>
+                                    }
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="quantity">Width</label>
+                                <input type="text" class="form-control ml-2" id="width" @bind-value="element.Width" />
+                            </div>
+
+                            <div class="form-group">
+                                <label for="quantity">Height</label>
+                                <input type="text" class="form-control ml-2" id="height" @bind-value="element.Height" />
+                            </div>                         
+                        </div>
+                        <button type="button" class="btn btn-primary d-flex justify-content-end mt-2" @onclick="SaveElement">@elementAddEditAction</button>
+
+                        <table class="table mt-3">
+                            <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Width</th>
+                                    <th>Height</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                                @foreach (var element in window.SubElements)
+                                {
+                                    <tr>
+                                        <td>@element.Type</td>
+                                        <td>@element.Width</td>
+                                        <td>@element.Height</td>
+                                        <td>
+                                            <button type="button" class="btn btn-primary btn-sm" @onclick="(() => EditElement(element))">Edit</button>
+                                            <button type="button" class="btn btn-danger btn-sm" @onclick="(() => RemoveElement(element))">Remove</button>
+                                        </td>
+                                    </tr>
+                                }
+
+                            </tbody>
+                        </table>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseWindowModal">Close</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveWindow">Submit</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@code {
+    [Parameter]
+    public int Id { get; set; }
+
+    private OrderModel? order;
+    private OrderWindowModel window;
+    private OrderSubElementModel element;
+    private List<WindowModel> windows;
+    private List<ElementModel> elements;
+    private string? orderAddEditAction;
+    private string? windowModalTitle; 
+    private bool showWindowModal = false;
+    private string? elementAddEditAction;
+    private bool disableWindowDropdown = false;
+    private bool disableElementDropdown = false;
+    private string baseAddress = "https://localhost:7201/";
+    private string? apiUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        try
+        {
+            apiUrl = $"{baseAddress}api/v1/orders";
+            order = Id == 0 ? new OrderModel() : await GetOrder();
+            orderAddEditAction = Id == 0 ? "Add" : "Edit";
+
+            window = new OrderWindowModel();
+            element = new OrderSubElementModel();
+
+            windows = await GetWindows();
+            elements = await GeElements();
+
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+    private void PrepareOrder()
+    {
+
+    }
+    private async Task SaveOrder()
+    {
+
+        if (order?.Id == 0)
+        {
+            await CreateOrder(order);
+        }
+        else
+        {
+            await UpdateOrder(order);
+        }
+    }
+
+    private async Task<OrderModel?> GetOrder()
+    {
+
+        OrderModel? orderModel = null;
+
+        var response = await Http.GetAsync($"{apiUrl}/{Id}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            orderModel = await JsonSerializer.DeserializeAsync<OrderModel>(await response.Content.ReadAsStreamAsync(), jsonSerializerOptions);
+        }
+
+        return orderModel;
+    }
+
+    private async Task CreateOrder(OrderModel order)
+    {
+
+        var json = JsonSerializer.Serialize(order);
+        var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await Http.PostAsync(apiUrl, stringContent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            RedirectToComponentOrder();
+        }
+    }
+
+    private async Task UpdateOrder(OrderModel order)
+    {
+        var json = JsonSerializer.Serialize(order);
+        var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await Http.PutAsync($"{apiUrl}/{Id}", stringContent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            RedirectToComponentOrder();
+        }
+    }
+
+    private void AddWindow()
+    {
+        window = new OrderWindowModel();
+        windowModalTitle = "New Widow";
+        window.Id = order.Windows.Count() > 0 ? order.Windows.Last().Id + 1 : 1;
+        disableWindowDropdown = false;
+        AddElement();
+        ShowWindowModal();
+    }
+    private void EditWindow(OrderWindowModel window)
+    {
+        this.window = window;
+        windowModalTitle = "Edit Widow";
+        disableWindowDropdown = true;
+        AddElement();
+        ShowWindowModal();
+    }
+
+    private void RemoveWindow(OrderWindowModel window)
+    {
+        order.Windows.Remove(window);
+    }
+
+    private void SaveWindow()
+    {
+        if (order.Windows.Any(w => w.Id == window.Id))
+        {
+            var existingWindow = order.Windows.FirstOrDefault(w => w.Id == window.Id);
+
+            existingWindow.Quantity = window.Quantity;
+        }
+        else
+        {
+            var newWindow = windows.FirstOrDefault(w => w.Id == window.WindowId);
+
+            if (newWindow != null)
+                window.Name = newWindow.Name;
+
+            order.Windows.Add(window);
+        }
+
+        CloseWindowModal();
+    }
+
+    private void AddElement()
+    {
+        element = new OrderSubElementModel();
+        element.Id = window.SubElements.Count() > 0 ? window.SubElements.Last().Id + 1 : 1;
+        elementAddEditAction = "Add";
+        disableElementDropdown = false;
+    }
+    private void EditElement(OrderSubElementModel element)
+    {
+        this.element = element;
+        elementAddEditAction = "Edit";
+        disableElementDropdown = true;
+    }
+
+    private void RemoveElement(OrderSubElementModel element)
+    {
+        window.SubElements.Remove(element);
+    }
+
+    private void SaveElement()
+    {
+        if (window.SubElements.Any(w => w.Id == element.Id))
+        {
+            var existingElement = window.SubElements.FirstOrDefault(w => w.Id == element.Id);
+
+            existingElement.Width = element.Width;
+            existingElement.Height = element.Height;
+        }
+        else
+        {
+            var newElement = elements.FirstOrDefault(w => w.Id == element.ElementId);
+
+            if (newElement != null)
+                element.Type = newElement.Type;
+
+            window.SubElements.Add(element);
+        }
+        AddElement();
+    }
+
+    private void ShowWindowModal()
+    {
+        showWindowModal = true;
+    }
+
+    private void CloseWindowModal()
+    {
+        showWindowModal = false;
+
+    }
+
+    private void RedirectToComponentOrder()
+    {
+        NavigationManager.NavigateTo("/orders");
+    }
+
+    private async Task<List<WindowModel>> GetWindows()
+    {
+        List<WindowModel> windows = null;
+
+        var response = await Http.GetAsync($"{baseAddress}api/v1/windows");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            windows = await JsonSerializer.DeserializeAsync<List<WindowModel>>(await response.Content.ReadAsStreamAsync(), jsonSerializerOptions);
+        }
+
+        return windows;
+    }
+
+    private async Task<List<ElementModel>> GeElements()
+    {
+        List<ElementModel> elements = null;
+
+        var response = await Http.GetAsync($"{baseAddress}api/v1/elements");
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            elements = await JsonSerializer.DeserializeAsync<List<ElementModel>>(await response.Content.ReadAsStreamAsync(), jsonSerializerOptions);
+        }
+
+        return elements;
+    }
+}

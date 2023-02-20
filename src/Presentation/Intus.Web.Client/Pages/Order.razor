@@ -1,0 +1,106 @@
+﻿@page "/orders"
+
+@using Intus.Web.Framework.Contracts.V1.Order;
+@using System.Text.Json;
+
+@inject NavigationManager NavigationManager;
+@inject HttpClient Http;
+
+<div style="display: flex; justify-content: space-between;">
+    <h3 style="margin-right: auto;">Orders</h3>
+    <button class="btn btn-primary" @onclick="RedirectToComponentAddOrder">Add New</button>
+</div>
+
+
+<h3 class="mt-5">Order Data</h3>
+
+@if (orders == null)
+{
+    <p><em>Loading...</em></p>
+}
+
+
+@if (orders != null)
+{
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Order Name</th>
+                <th>State</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var order in orders)
+            {
+                <tr>
+                    <td>@order.Name</td>
+                    <td>@order.State</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => EditOrder(order)">Edit</button>
+                        <button class="btn btn-primary" @onclick="() => DeleteOrder(order)">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+
+@code {
+    private List<OrderModel>? orders;
+    private OrderModel order = new OrderModel();
+    private string baseAddress = "https://localhost:7201/";
+    private string? apiUrl;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            apiUrl = $"{baseAddress}api/v1/orders";
+
+            await GetOrders();
+        }
+        catch(Exception ex)
+        {
+
+        }
+    }
+    private async Task GetOrders()
+    {
+        var response = await Http.GetAsync(apiUrl);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            orders = await JsonSerializer.DeserializeAsync<List<OrderModel>>(await response.Content.ReadAsStreamAsync(), jsonSerializerOptions);
+        }
+    }
+
+    private void RedirectToComponentAddOrder()
+    {
+        NavigationManager.NavigateTo($"/order");
+    }
+
+    private void RedirectToComponentEditOrder()
+    {
+        NavigationManager.NavigateTo($"/order/{order.Id}");
+    }
+
+    private void EditOrder(OrderModel order)
+    {
+        this.order = order;
+
+        RedirectToComponentEditOrder();
+    }
+
+    private async Task DeleteOrder(OrderModel order)
+    {
+        await Http.DeleteAsync($"{apiUrl}/{order.Id}");
+
+        await GetOrders();
+    }
+}

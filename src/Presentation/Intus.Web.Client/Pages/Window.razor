@@ -1,0 +1,151 @@
+﻿@page "/window"
+
+@using Intus.Web.Framework.Contracts.V1.Window;
+@using System.Text.Json;
+@using System.Text;
+@inject HttpClient Http
+
+<PageTitle>Windows</PageTitle>
+
+<div class="d-flex justify-content-center">
+    <h1>Windows</h1>
+</div>
+
+<h3>@actionName Window</h3>
+
+<div class="form-group">
+    <label for="windowName">Name</label>
+    <input type="text" class="form-control" id="windowName" @bind="window.Name" />
+</div>
+
+<button class="btn btn-primary mt-2" @onclick="SaveWindow">Save</button>
+
+
+<h3 class="mt-5">Window Data</h3>
+
+@if (windows == null)
+{
+    <p><em>Loading...</em></p>
+}
+
+
+@if (windows != null)
+{
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var window in windows)
+            {
+                <tr>
+                    <td>@window.Name</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="@(() => EditWindow(window))">Edit</button>
+                        <button class="btn btn-primary " @onclick="@(() => DeleteWindow(window))">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+
+    private List<WindowModel>? windows;
+    private WindowModel window;
+    private string actionName = "Create";
+    private string baseAddress = "https://localhost:7201/";
+    private string? apiUrl;
+
+    protected override async Task OnInitializedAsync()
+
+    {
+        try
+        {
+            apiUrl = $"{baseAddress}api/v1/windows";
+            window = PrepareNewWindowModel();
+
+            await GetWindows();
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+
+    private async Task GetWindows()
+    {
+        var response = await Http.GetAsync(apiUrl);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            windows = await JsonSerializer.DeserializeAsync<List<WindowModel>>(await response.Content.ReadAsStreamAsync(), jsonSerializerOptions);
+        }
+    }
+
+    private void EditWindow(WindowModel window)
+    {
+        actionName = "Edit";
+
+        this.window = window;
+    }
+
+
+    private async Task SaveWindow()
+    {
+        if (window.Id == 0)
+        {
+            await CreateWindow(window);
+        }
+        else
+        {
+            await UpdateWindow(window);
+        }
+
+    }
+
+    private async Task CreateWindow(WindowModel window)
+    {
+
+        var json = JsonSerializer.Serialize(window);
+        var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await Http.PostAsync(apiUrl, stringContent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            this.window = PrepareNewWindowModel();
+            await GetWindows();
+        }
+    }
+
+    private async Task UpdateWindow(WindowModel window)
+    {
+        var json = JsonSerializer.Serialize(window);
+        var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await Http.PutAsync($"{apiUrl}/{window.Id}", stringContent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            this.window = PrepareNewWindowModel();
+            await GetWindows();
+        }
+    }
+
+    private async Task DeleteWindow(WindowModel window)
+    {
+        await Http.DeleteAsync($"{apiUrl}/{window.Id}");
+
+        await GetWindows();
+    }
+
+    private WindowModel PrepareNewWindowModel()
+    {
+        actionName = "Create";
+        return new WindowModel();
+    }
+}

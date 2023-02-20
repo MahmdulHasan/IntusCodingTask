@@ -1,0 +1,155 @@
+﻿@page "/element"
+
+@using Intus.Web.Framework.Contracts.V1.Element;
+@using System.Text.Json;
+@using System.Text;
+@inject HttpClient Http
+
+<PageTitle>Elements</PageTitle>
+
+<div class="d-flex justify-content-center">
+    <h1>Elements</h1>
+</div>
+
+<h3>@actionName Element</h3>
+
+<div class="form-group">
+    <label for="elementName">Type</label>
+    <input type="text" class="form-control" id="elementName" @bind="element.Type" />
+</div>
+
+<button class="btn btn-primary mt-2" @onclick="SaveElement">Save</button>
+
+
+<h3 class="mt-5">Element Data</h3>
+
+@if (elements == null)
+{
+    <p><em>Loading...</em></p>
+}
+
+
+@if (elements != null)
+{
+    <table class="table mt-3">
+        <thead>
+            <tr>
+                <th>Type</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var element in elements)
+            {
+                <tr>
+                    <td>@element.Type</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="@(() => EditElement(element))">Edit</button>
+                        <button class="btn btn-primary " @onclick="@(() => DeleteWindow(element))">Delete</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+@code {
+
+    private List<ElementModel>? elements;
+    private ElementModel element;
+    private string actionName = "Create";
+
+    private string baseAddress = "https://localhost:7201/";
+    private string? apiUrl;
+
+    protected override async Task OnInitializedAsync()
+
+    {
+        try
+        {
+            apiUrl = $"{baseAddress}api/v1/elements";
+
+            element = PrepareNewElementModel();
+
+            await GetElements();
+        }
+        catch (Exception ex)
+        {
+
+        }
+    }
+
+    private async Task GetElements()
+    {
+        var response = await Http.GetAsync(apiUrl);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonSerializerOptions = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+            elements = await JsonSerializer.DeserializeAsync<List<ElementModel>>(await response.Content.ReadAsStreamAsync(), jsonSerializerOptions);
+        }
+    }
+
+    private void EditElement(ElementModel element)
+    {
+        actionName = "Edit";
+
+        this.element = element;
+    }
+
+
+    private async Task SaveElement()
+    {
+        if (element.Id == 0)
+        {
+            await CreateElement(element);
+        }
+        else
+        {
+            await UpdateElement(element);
+        }
+
+    }
+
+    private async Task CreateElement(ElementModel element)
+    {
+
+        var json = JsonSerializer.Serialize(element);
+        var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await Http.PostAsync(apiUrl, stringContent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            this.element = PrepareNewElementModel();
+            await GetElements();
+        }
+    }
+
+    private async Task UpdateElement(ElementModel element)
+    {
+        var json = JsonSerializer.Serialize(element);
+        var stringContent = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await Http.PutAsync($"{apiUrl}/{element.Id}", stringContent);
+
+        if (response.IsSuccessStatusCode)
+        {
+            this.element = PrepareNewElementModel();
+            await GetElements();
+        }
+
+
+    }
+
+    private async Task DeleteWindow(ElementModel element)
+    {
+        await Http.DeleteAsync($"{apiUrl}/{element.Id}");
+
+        await GetElements();
+    }
+
+    private ElementModel PrepareNewElementModel()
+    {
+        actionName = "Create";
+        return new ElementModel();
+    }
+}
